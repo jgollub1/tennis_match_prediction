@@ -15,7 +15,7 @@ pd.options.mode.chained_assignment = None
 if __name__=='__main__':
 	atp_year_list = []
 	for i in xrange(1968,2018):
-	    atp_year_list.append(pd.read_csv("../my_data/matches/atp_matches_{0}.csv".format(i)))
+	    atp_year_list.append(pd.read_csv("../my_data/matches/"+TOUR+"_matches_{0}.csv".format(i)))
 	df = pd.concat(atp_year_list, ignore_index = True)
 
 	# these may be changes specific to atp dataframe; normalize_name() is specific to atp/wta...

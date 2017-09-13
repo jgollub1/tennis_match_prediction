@@ -2,4 +2,60 @@ Before running the code, paste the scripts “helper_functions.py” and “data
 
 /Users/your_username/anaconda/lib/python2.7/site-packages
 
-Now, after confirming that all required libraries in “specs.txt” are installed, you are ready to produce more detailed match_datasets.
+Now, after confirming that all required libraries in “specs.txt” are installed, you are ready to produce new datasets from the information supplied in Jeff Sackmann’s datasets. To build the datasets yourself, refer to the scripts in ‘build_datasets.’
+
+
+Match Dataframe Construction:
+
+From this script, we generate a .csv file with detailed statistics on any subset of tour-level matches. Modify the global variables at the top of the script to specify the scope of our resulting dataset.
+
+TOUR - [‘atp’,’wta’] (whether to take matches from the men’s or women’s tour)
+COUNT - [True, False] (whether or not to use 538’s decaying k-factor in computing elo)
+START_YEAR - [1968,…,2017] (the year from which we want to start collecting match data)
+ONLY_PBP - [True, False] (whether or not we filter matches without point-by-point data)
+
+After entering the desired settings, run the script ‘match_df_construction.py’ from your terminal to generate a corresponding .csv file and store it in the ‘my_data’ folder. If generating data for WTA matches, make sure to add the original match files of the form “wta_matches_{0}.csv".format(year) to the ‘my_data’ folder for all corresponding years (these may be obtained from Jeff Sackmann’s github repo https://github.com/JeffSackmann/tennis_wta).
+
+Point-by-Point Dataframe Construction:
+
+Now, point-by-point construction is intended to be run on a match Dataframe. This script enumerates every match of length $k$ into a set of $k$ data points representing the match before each of the $k$ points. Then, set the following variables:
+
+BEST_OF_THREE - [True, False] (whether to enumerate best-of three matches in our dataset)
+FILE_NAME - ‘___’ (name of .csv file with matches to enumerate)
+
+Now, run the script ‘pbp_df_construction.py’ to generate a corresponding .csv file and store it in the ‘my_data’ folder.
+
+
+Columns:
+
+There are many columns generated in both of these scripts. Below are relevant descriptions of significant columns (in all cases, ‘sf_’ denotes a surface-specific metric of that that statistic):
+
+pi_elo - player i’s elo rating prior to the match
+pi_sf_elo - player i’s surface-specific elo rating prior to the match
+pi_elo_538 - player i’s 538-method elo rating prior to the match
+pi_sf_elo_538 - player i’s surface-specific 538-method elo rating prior to the match
+
+pi_52_swon - player i’s service points won over the past twelve months
+pi_52_svpt - player i’s total service points over the past twelve months
+pi_52_rwon - player i’s return points won over the past twelve months
+pi_52_rpt - player i’s total return points over the past twelve months
+
+pi_s_pct - player i’s serving percentage over the past twelve months
+pi_r_pct - player i’s return percentage over the past twelve months
+pi_s_pct_JS - player i’s James-Stein normalized serving percentage over the past twelve months
+pi_r_pct_JS - player i’s James-Stein normalized return percentage over the past twelve months
+
+avg_52_s - the average serving percentage of all players over the past twelve months
+avg_52_r - the average return percentage of all players over the past twelve months
+sf_avg_52_s - the average surface-specific serving percentage of all players over the past twelve months
+sf_avg_52_r - the average surface-specific return percentage of all players over the past twelve months
+tny_stats - the current tournament’s average serving percentage one year ago
+
+pi_s_kls - player i’s combined serving percentage, per the Klaassen-Magnus equation
+pi_s_kls_JS - player i’s combined serving percentage, based on James-Stein normalized stats, per the Klaassen-Magnus equation
+pi_s_wgtk - player i’s James-Stein normalized serving percentage, weighted with surface-specific serving percentage by proportion k
+
+match_prob_kls - player 0’s win probability before match starts, based on Klaassen-Magnus serving percentage
+match_prob_kls_JS - player 0’s win probability before match starts, based on James-Stein normalized Klaassen-Magnus serving percentage
+match_z_kls - a z-score of the win probability based on Klaassen-Magnus serving percentage (intended for logistic regression, etc.)
+

@@ -6,9 +6,10 @@ import time
 
 # indicator to generate point-by-point for best-of-three matches (else: best-of-five)
 BEST_OF_THREE = 1
+FILE_NAME = 'elo_pbp_with_surface_9_12.csv'
 
 if __name__=='__main__':
-	df = pd.read_csv('../my_data/elo_pbp_with_surface_9_12.csv')
+	df = pd.read_csv('../my_data/'+FILE_NAME)
 	del df['Unnamed: 0']
 
 	# append . to end of pbp string to signify end of match
