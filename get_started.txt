@@ -1,0 +1,5 @@
+Before running the code, paste the scripts “helper_functions.py” and “data_functions.py” into your python path, which should take the form:
+
+/Users/your_username/anaconda/lib/python2.7/site-packages
+
+Now, after confirming that all required libraries in “specs.txt” are installed, you are ready to produce more detailed match_datasets.

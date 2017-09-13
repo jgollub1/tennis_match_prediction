@@ -1,8 +1,3 @@
-# TO DO: 1) clean up, thoroughly, the existing code here
-# 2) write enumerate_pbp, which will be handy if we use
-# any future models that do rely on order
-# get set_order is acting screwy
-
 import math
 import numpy as np
 import pandas as pd
@@ -27,11 +22,9 @@ class stats_52():
             self.last_year[diff:] = self.last_year[:12-diff]; self.last_year[:diff] = 0
         self.most_recent = match_date
 
-    
     def update(self,match_date,match_stats):
         self.set_month(match_date)
-        self.last_year[0] = self.last_year[0]+match_stats
-        
+        self.last_year[0] = self.last_year[0]+match_stats  
 
 # a similar class to store a tournament's serving averages from the previous year
 class tny_52():
@@ -50,7 +43,6 @@ class tny_52():
         self.most_recent = match_year
         self.historical_avgs[match_year] = (self.tny_stats[0][0],self.tny_stats[0][1])
         return 0 if self.tny_stats[1][1]==0 else self.tny_stats[1][0]/float(self.tny_stats[1][1])
-
 
 # v3.0 with smarter object construction
 # use np.array to create arrays from lists; use np.concatenate to combine arrays
@@ -168,13 +160,14 @@ def generate_df_2(df_pbp,columns,final_set_no_tb):
         a,b = enumerate_pbp_2(df_pbp['pbp'][i],info,final_set_no_tb)
         pbps[i],dfs[i] = a, np.asarray(b)
 
+    # first two columns (match_id,surface) are strings
     df = pd.DataFrame(np.concatenate(dfs))
     df.columns = columns + ['sets_0','sets_1','games_0',\
                   'games_1','points_0','points_1','tp_0','tp_1','p0_swp','p0_sp','p1_swp','p1_sp','server']
+    df[df.columns[2:]] = df[df.columns[2:]].astype(float)
     df['score'] = np.concatenate(pbps)
     df['in_lead'] = in_lead(df) 
     return df
-
 
 # optimized function to check who leads, combining boolean indices and functions
 def in_lead(df):
@@ -188,17 +181,6 @@ def in_lead(df):
     leads[game_ind] = game_d[game_ind]>0
     leads[point_ind] = point_d[point_ind]>0
     return leads
-# def generate_df_2(df_pbp,final_set_no_tb):
-#     print 'hi'
-#     dfs = [0]*len(df_pbp)
-#     for i in xrange(len(df_pbp)):
-#         info = [df_pbp['match_id'][i],df_pbp['elo_diff'][i],df_pbp['s_elo_diff'],df_pbp['winner'][i]]
-#         dfs[i] = np.asarray(enumerate_pbp_2(df_pbp['pbp'][i],info,final_set_no_tb)).T
-#     df = pd.DataFrame(np.concatenate(dfs))
-#     df.columns = ['match_id','elo_diff','s_elo_diff','winner','score','server','sets_0','sets_1','games_0',\
-#                   'games_1','points_0','points_1','tp_0','tp_1','p0_swp','p0_sp','p1_swp','p1_sp']
-#     return df
-
 
 # functions used to parse point-by-point tennis data
 def simplify(s):
@@ -474,18 +456,8 @@ def cross_validate(val_df,clf,cols,target,hyper_parameters,n_splits):
 
 if __name__=='__main__':
     S = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R.RRRSSR;RSRRR;SSSS;RSSSS;SSRSS;SRSRSRRSSS;SRSSRS;RRRR;RRSRSSSS.SRRSSRSS;SSSS;RSRSRR;RSRSSS;SSSRS;SSRSS;SSSS;SSSRS;SSSRRRRSR.'
-    #S = 'SSSS;RRRR;RSSSS;RSSRRSRSRR;SRRSSS;RRSSRR.SSRRSS;RSSSS;SRRRR;RSRRSR;SRSSRS;SSSRS;SSSS;RRRSSR;'
     S1 = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R;'
     S2 = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R.RRRSSR;RSRRR;SSSS;'
     S3 = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R.RRRSSR;RSRRR;S'
     S4 = 'SS/R.RRRSSR;RSRRR;SSSS;RSSSS;SSRSS;SRSRSRRSSS;SRSSRS;RRRR;RRSRSS'
-    a,b = enumerate_pbp(S,'point')
-
-
-
-
-
-
-
-
-
+    a,b = enumerate_pbp_2(S,[])

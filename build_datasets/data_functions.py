@@ -241,10 +241,10 @@ def generate_JS_stats(df):
     # calculate B_i coefficients for each player in terms of service points
     p_hat = np.sum([df['p0_52_swon'],df['p1_52_swon']])/np.sum([df['p0_52_svpt'],df['p1_52_svpt']])
     for label in ['p0','p1']:
-        df[label+'_s_pct'] = [p_hat if x==0 else x for x in np.nan_to_num(df[label+'_52_swon']/df[label+'_52_svpt'])]
-        df[label+'_r_pct'] = [1-p_hat if x==0 else x for x in np.nan_to_num(df[label+'_52_rwon']/df[label+'_52_rpt'])]
-        df[label+'_sf_s_pct'] = [p_hat if x==0 else x for x in np.nan_to_num(df[label+'_sf_52_swon']/df[label+'_sf_52_svpt'])]
-        df[label+'_sf_r_pct'] = [1-p_hat if x==0 else x for x in np.nan_to_num(df[label+'_sf_52_rwon']/df[label+'_sf_52_rpt'])]
+        df[label+'_s_pct'] = [df['avg_52_s'][i] if x==0 else x for i,x in enumerate(df[label+'_52_swon']/df[label+'_52_svpt'])]
+        df[label+'_r_pct'] = [df['avg_52_r'][i] if x==0 else x for i,x in enumerate(df[label+'_52_rwon']/df[label+'_52_rpt'])]
+        df[label+'_sf_s_pct'] = [df['sf_avg_52_s'][i] if x==0 else x for i,x in enumerate(df[label+'_sf_52_swon']/df[label+'_sf_52_svpt'])]
+        df[label+'_sf_r_pct'] = [df['sf_avg_52_s'][i] if x==0 else x for i,x in enumerate(df[label+'_sf_52_rwon']/df[label+'_sf_52_rpt'])]
 
     # repeat for surace stats and overall stats
     for sv in ['','sf_']:
