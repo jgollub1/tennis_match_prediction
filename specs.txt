@@ -1,2 +1,0 @@
-
-This project runs on python 2.7. Before running of the scripts, make sure you have installed numpy, pandas, and sklearn, all of which may be downloaded via “pip install” (downloading via the Conda package manager is best for scipy). 
