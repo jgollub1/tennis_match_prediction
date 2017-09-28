@@ -78,7 +78,7 @@ if __name__=='__main__':
 	    df = df[df['winner']!='None']
 	df = df.reset_index(drop=True)
 
-	p_hat,df = generate_JS_stats(df)
+	df = generate_JS_stats(df)
 
 	# keep relevant columns
 	df = df[['tny_id','tny_name','surface','tny_date','match_year','match_month',

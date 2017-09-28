@@ -275,4 +275,4 @@ def generate_JS_stats(df):
         r_history[r_history!=r_history] = 1-p_hat
         df['p0_'+sv+'r_pct_JS'] = r_history[:n]+df['B_'+sv+'i0_r']*((1-p_hat)-r_history[:n])
         df['p1_'+sv+'r_pct_JS'] = r_history[n:]+df['B_'+sv+'i1_r']*((1-p_hat)-r_history[n:])
-    return p_hat,df
+    return df

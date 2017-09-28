@@ -1,4 +1,4 @@
-Before running the code, paste the scripts “helper_functions.py” and “data_functions.py” into your python path, which should take the form:
+Before running the code, paste the scripts “helper_functions.py”, “data_functions.py”, and “elo_538.py” into your python path, which should take the form:
 
 /Users/your_username/anaconda/lib/python2.7/site-packages
 
