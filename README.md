@@ -1,6 +1,6 @@
 # tennis_match_prediction
 
-![alt text](https://github.com/jgollub1/tennis_match_prediction/samples/federer_nadal_ao_17.png "wp graph 1")
+![alt text](https://github.com/jgollub1/tennis_match_prediction/tree/master/samples/federer_nadal_ao_17.png "wp graph 1")
 
 Accurate in-match prediction for tennis is important to a variety of communities, including sports journalists, tennis aficionados, and professional sports betters. In-match prediction consists of the following estimate:  given any score between two players and all historical information about the two players, what is the probability that each player wins the match? While win-probability graphs have recently received more attention in football (see Brian Burke's http://www.advancedfootballanalytics.com) and baseball, they still receive little exposure in tennis, because strong tools for their prediction have not been implemented and been made widely available (until now!).
 
