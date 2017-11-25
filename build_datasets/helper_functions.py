@@ -1,3 +1,8 @@
+# TO DO: 1) clean up, thoroughly, the existing code here
+# 2) write enumerate_pbp, which will be handy if we use
+# any future models that do rely on order
+# get set_order is acting screwy
+
 import math
 import numpy as np
 import pandas as pd
@@ -24,7 +29,46 @@ class stats_52():
 
     def update(self,match_date,match_stats):
         self.set_month(match_date)
-        self.last_year[0] = self.last_year[0]+match_stats  
+        self.last_year[0] = self.last_year[0]+match_stats
+
+# stores opponent ability at time of match to produce adjusted stats
+class adj_stats_52():
+    def __init__(self,date):
+        self.most_recent = date
+        self.last_year = np.zeros([12,6])
+        self.adj_sr = [0,0]
+        
+    def time_diff(self,new_date,old_date):
+        return 12*(new_date[0]-old_date[0])+(new_date[1]-old_date[1])
+
+    def set_month(self,match_date):
+        diff = self.time_diff(match_date,self.most_recent)
+        if diff>=12:
+            self.last_year = np.zeros([12,6])
+        elif diff>0:
+            self.last_year[diff:] = self.last_year[:12-diff]; self.last_year[:diff] = 0
+        self.most_recent = match_date
+        self.update_adj_sr()
+
+    def update(self,match_date,match_stats):
+        self.set_month(match_date)
+        self.last_year[0] = self.last_year[0]+match_stats
+        self.update_adj_sr()
+    
+    # update the player's adjust serve/return ability, based on last twelve months
+    def update_adj_sr(self):
+        s_pt, r_pt = np.sum(self.last_year[:,1]), np.sum(self.last_year[:,3])
+        if s_pt==0 or r_pt==0:
+            self.adj_sr = [0,0]
+            return
+        with np.errstate(divide='ignore', invalid='ignore'):
+            f_i = np.sum(self.last_year[:,0])/s_pt
+            f_adj = 1 - np.sum(self.last_year[:,4])/s_pt
+            g_i = np.sum(self.last_year[:,2])/r_pt
+            g_adj = 1 - np.sum(self.last_year[:,5])/r_pt
+        self.adj_sr[0] = f_i - f_adj
+        self.adj_sr[1] = g_i - g_adj
+
 
 # a similar class to store a tournament's serving averages from the previous year
 class tny_52():
@@ -43,6 +87,7 @@ class tny_52():
         self.most_recent = match_year
         self.historical_avgs[match_year] = (self.tny_stats[0][0],self.tny_stats[0][1])
         return 0 if self.tny_stats[1][1]==0 else self.tny_stats[1][0]/float(self.tny_stats[1][1])
+
 
 # v3.0 with smarter object construction
 # use np.array to create arrays from lists; use np.concatenate to combine arrays
@@ -153,21 +198,22 @@ def enumerate_pbp_2(s,columns,final_set_extend=0):
 # leave this here so you can modify column names
 # NOTE: it is best to keep all the arrays in a list and then concatenate outside the loop
 # columns param. specifies which columns to feed into the new dataframe
-def generate_df_2(df_pbp,columns,final_set_no_tb):
+def generate_df_2(df_pbp,columns,final_set_extend):
     pbps,dfs = [0]*len(df_pbp),[0]*len(df_pbp)
     for i in xrange(len(df_pbp)):
         info = [df_pbp[col][i] for col in columns]
-        a,b = enumerate_pbp_2(df_pbp['pbp'][i],info,final_set_no_tb)
+        a,b = enumerate_pbp_2(df_pbp['pbp'][i],info,final_set_extend)
         pbps[i],dfs[i] = a, np.asarray(b)
 
-    # first two columns (match_id,surface) are strings
     df = pd.DataFrame(np.concatenate(dfs))
     df.columns = columns + ['sets_0','sets_1','games_0',\
                   'games_1','points_0','points_1','tp_0','tp_1','p0_swp','p0_sp','p1_swp','p1_sp','server']
+    print 'df shape: ', df.shape
     df[df.columns[2:]] = df[df.columns[2:]].astype(float)
     df['score'] = np.concatenate(pbps)
     df['in_lead'] = in_lead(df) 
     return df
+
 
 # optimized function to check who leads, combining boolean indices and functions
 def in_lead(df):
@@ -181,6 +227,17 @@ def in_lead(df):
     leads[game_ind] = game_d[game_ind]>0
     leads[point_ind] = point_d[point_ind]>0
     return leads
+# def generate_df_2(df_pbp,final_set_no_tb):
+#     print 'hi'
+#     dfs = [0]*len(df_pbp)
+#     for i in xrange(len(df_pbp)):
+#         info = [df_pbp['match_id'][i],df_pbp['elo_diff'][i],df_pbp['s_elo_diff'],df_pbp['winner'][i]]
+#         dfs[i] = np.asarray(enumerate_pbp_2(df_pbp['pbp'][i],info,final_set_no_tb)).T
+#     df = pd.DataFrame(np.concatenate(dfs))
+#     df.columns = ['match_id','elo_diff','s_elo_diff','winner','score','server','sets_0','sets_1','games_0',\
+#                   'games_1','points_0','points_1','tp_0','tp_1','p0_swp','p0_sp','p1_swp','p1_sp']
+#     return df
+
 
 # functions used to parse point-by-point tennis data
 def simplify(s):
@@ -384,48 +441,69 @@ def break_point(s):
             else:
                 return (0,0)
 
-# cols is a list of all column sets to test; compare with kls pre-match forecasts
-def validate_results(df,columns,n_splits=5):
+# cols is a list of column sets for logistic regression; 
+# probs are model-specific probabilities
+def validate_results(df,probs,lm_columns,n_splits=5):
     kfold = KFold(n_splits=n_splits,shuffle=True)
-    scores = np.zeros([len(columns)+2,2,n_splits]);i=0
+    scores = np.zeros([len(lm_columns)+len(probs),2,n_splits]);i=0
     for train_ind,test_ind in kfold.split(df):
         lm = linear_model.LogisticRegression(fit_intercept = True)
         train_df,test_df = df.loc[train_ind],df.loc[test_ind]
         
-        for k,cols in enumerate(columns):
+        for j,prob_col in enumerate(probs):
+            y_preds = test_df[prob_col]>.5
+            scores[j][0][i]=accuracy_score(test_df['winner'],y_preds)
+            scores[j][1][i]=log_loss(test_df['winner'],test_df[prob_col],labels=[0,1])
+        
+        for k,cols in enumerate(lm_columns):
             lm.fit(train_df[cols].values.reshape([len(train_df),len(cols)]),train_df['winner'])
             y_preds = lm.predict(test_df[cols].values.reshape([len(test_df),len(cols)]))
             y_probs = lm.predict_proba(test_df[cols].values.reshape([len(test_df),len(cols)]))
-            scores[k][0][i]=accuracy_score(test_df['winner'],y_preds)
-            scores[k][1][i]=log_loss(test_df['winner'],y_probs,labels=[0,1])
-        
-        y_preds2 = test_df['match_prob_kls']>.5
-        y_preds3 = test_df['match_prob_kls_JS']>.5
-        scores[len(columns)][0][i]=accuracy_score(test_df['winner'],y_preds2)
-        scores[len(columns)][1][i]=log_loss(test_df['winner'],test_df['match_prob_kls'],labels=[0,1])
-        scores[len(columns)+1][0][i]=accuracy_score(test_df['winner'],y_preds3)
-        scores[len(columns)+1][1][i]=log_loss(test_df['winner'],test_df['match_prob_kls_JS'],labels=[0,1])
+            scores[len(probs)+k][0][i]=accuracy_score(test_df['winner'],y_preds)
+            scores[len(probs)+k][1][i]=log_loss(test_df['winner'],y_probs,labels=[0,1])
         i+=1
-    
-    for i,cols in enumerate(columns):
-        print 'columns: ',cols
-        #print '% s_elo used in lm fit: ',lm.coef_[0][1]/(lm.coef_[0][0]+lm.coef_[0][1])
-        print 'accuracy: ', np.mean(scores[i][0])
-        print 'loss: ', np.mean(scores[i][1])
-    
-    print 'kls probabilities'
-    print 'accuracy: ', np.mean(scores[len(columns)][0])
-    print 'loss: ', np.mean(scores[len(columns)][1])
 
-    print 'kls JS probabilities'
-    print 'accuracy: ', np.mean(scores[len(columns)+1][0])
-    print 'loss: ', np.mean(scores[len(columns)+1][1])
+    for j,prob_col in enumerate(probs):
+        print prob_col
+        print 'accuracy: ', np.mean(scores[j][0])
+        print 'loss: ', np.mean(scores[j][1])
+    
+    for i,cols in enumerate(lm_columns):
+        print 'lm columns: ',cols
+        print 'accuracy: ', np.mean(scores[len(probs)+i][0])
+        print 'loss: ', np.mean(scores[len(probs)+i][1])
+
+# test results, given train and test dfs
+def test_results(df_train,df_test,probs,lm_columns):
+    scores = np.zeros([len(lm_columns)+len(probs),2]);i=0
+
+    lm = linear_model.LogisticRegression(fit_intercept = True)
+    
+    for j,prob_col in enumerate(probs):
+        y_preds = df_test[prob_col]>.5
+        print prob_col
+        print 'accuracy: ', accuracy_score(df_test['winner'],y_preds)
+        print 'loss: ', log_loss(df_test['winner'],df_test[prob_col],labels=[0,1])
+    
+    for k,cols in enumerate(lm_columns):
+        lm.fit(df_train[cols].values.reshape([df_train.shape[0],len(cols)]),df_train['winner'])
+        y_preds = lm.predict(df_test[cols].values.reshape([df_test.shape[0],len(cols)]))
+        y_probs = lm.predict_proba(df_test[cols].values.reshape([df_test.shape[0],len(cols)]))
+
+        print 'lm columns: ', cols
+        print 'accuracy: ', accuracy_score(df_test['winner'],y_preds)
+        print 'loss: ', log_loss(df_test['winner'],y_probs,labels=[0,1])
+
+        if cols == ['elo_diff_538','sf_elo_diff_538']:
+            y_logit_probs = y_probs[:,1]        
+
+    return y_logit_probs
 
 def in_dict(x,d):
     return x in d
 
 # function to cross-validate, with no match-overlap between splits (since there are 100-200
-# points per match)
+# points per match); can use sklearn's GridSearchCV for multiple hyperparameters
 def cross_validate(val_df,clf,cols,target,hyper_parameters,n_splits):
     print 'searching for hyperparams...'
     ids = list(set(val_df['match_id']))
@@ -438,8 +516,8 @@ def cross_validate(val_df,clf,cols,target,hyper_parameters,n_splits):
         train_dict = dict(zip(train_index,[1]*len(train_index)))
         train_ind = vfunc(np.array(val_df['match_id']),train_dict)
         test_ind = (1 - train_ind)==1
-        Xtrain, ytrain = val_df[cols][train_ind], val_df[target][train_ind]
-        Xtest, ytest = val_df[cols][test_ind], val_df[target][test_ind]
+        Xtrain, ytrain = val_df[cols][train_ind], np.array(val_df[target][train_ind]).reshape([(sum(train_ind),)])
+        Xtest, ytest = val_df[cols][test_ind], np.array(val_df[target][test_ind]).reshape([(sum(test_ind),)])
         
         # retrieve classification score for every hyper_parameter fed into this function
         # LOOP THROUGH ALL KEYS here if you want to test multiple hyper_params
@@ -456,8 +534,18 @@ def cross_validate(val_df,clf,cols,target,hyper_parameters,n_splits):
 
 if __name__=='__main__':
     S = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R.RRRSSR;RSRRR;SSSS;RSSSS;SSRSS;SRSRSRRSSS;SRSSRS;RRRR;RRSRSSSS.SRRSSRSS;SSSS;RSRSRR;RSRSSS;SSSRS;SSRSS;SSSS;SSSRS;SSSRRRRSR.'
+    #S = 'SSSS;RRRR;RSSSS;RSSRRSRSRR;SRRSSS;RRSSRR.SSRRSS;RSSSS;SRRRR;RSRRSR;SRSSRS;SSSRS;SSSS;RRRSSR;'
     S1 = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R;'
     S2 = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R.RRRSSR;RSRRR;SSSS;'
     S3 = 'SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSSS;SSRRSRSRSS;SSSRS;RRSSRSSS;SSSRS;S/SS/SR/SS/SS/RS/SS/SS/SS/R.RRRSSR;RSRRR;S'
     S4 = 'SS/R.RRRSSR;RSRRR;SSSS;RSSSS;SSRSS;SRSRSRRSSS;SRSSRS;RRRR;RRSRSS'
-    a,b = enumerate_pbp_2(S,[])
+    a,b = enumerate_pbp(S,'point')
+
+
+
+
+
+
+
+
+

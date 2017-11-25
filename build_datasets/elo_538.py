@@ -24,7 +24,7 @@ LOSS = 0.
 
 
 class Rating(object):
-    def __init__(self, value=1500,times=0):
+    def __init__(self, value=1500,times=1):
         self.value = value
         self.times = times
 
@@ -46,12 +46,12 @@ class Elo_Rater(object):
         self.initial = initial
         self.beta = beta
 
-    def expect(self, rating, other_rating):
+    def expect(self, rating, other_rating_val):
         """The "E" function in Elo. It calculates the expected score of the
         first rating by the second rating.
         """
         # http://www.chess-mind.com/en/elo-system
-        diff = float(other_rating.value) - float(rating.value)
+        diff = float(other_rating_val) - float(rating.value)
         f_factor = 2 * self.beta  # rating disparity
         return 1. / (1 + 10 ** (diff / f_factor))
 
@@ -78,6 +78,7 @@ class Elo_Rater(object):
 
     def rate_1vs1(self, rating1, rating2, is_gs=False,counts=True):
         scores = (WIN, LOSS)
-        return (self.rate(rating1, [scores[0], rating2],is_gs,counts),
-                self.rate(rating2, [scores[1], rating1],is_gs,counts))
+        r1,r2 = rating1.value, rating2.value
+        return (self.rate(rating1, [scores[0], r2],is_gs,counts),
+                self.rate(rating2, [scores[1], r1],is_gs,counts))
 
