@@ -181,26 +181,6 @@ def generate_52_adj_stats(df,start_ind=0):
         avg_52_s,avg_52_r = row['avg_52_s'],row['avg_52_r']
         match_stats = [[],[]]
 
-        if row['l_name']=='Mikhail Youzhny' and row['w_name']=='Nick Kyrgios':
-            print 'Youzhny vs Kyrgios'
-            print row['match_year'], row['match_month']
-            for k,label in enumerate(w_l):
-                print 'player: ', row[label+'_name']
-                last_year = players_stats[row[label+'_name']].last_year
-                s_pt, r_pt = np.sum(last_year[:,1]), np.sum(last_year[:,3])
-                print 's points won', np.sum(last_year[:,0])
-                print 's points expected',  s_pt - np.sum(last_year[:,4])
-                print 'r points won', np.sum(last_year[:,2])
-                print 'r points expected', r_pt - np.sum(last_year[:,5])
-
-                f_i = np.sum(last_year[:,0])/s_pt
-                f_adj = 1 - np.sum(last_year[:,4])/s_pt
-                g_i = np.sum(last_year[:,2])/r_pt
-                g_adj = 1 - np.sum(last_year[:,5])/r_pt
-
-                print 'f_i, f_adj: ', f_i, f_adj
-                print 'g_i, g_adj: ', g_i, g_adj
-
         # add new players to the dictionary
         for k,label in enumerate(w_l):
             if row[label+'_name'] not in players_stats:
