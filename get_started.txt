@@ -9,6 +9,7 @@ Match Dataframe Construction:
 
 From this script, we generate a .csv file with detailed statistics on any subset of tour-level matches. Modify the global variables at the top of the script to specify the scope of our resulting dataset.
 
+SCRIPT_PATH - absolute file path to the sackmann directory of this repo on your machine
 TOUR - [‘atp’,’wta’] (whether to take matches from the men’s or women’s tour)
 COUNT - [True, False] (whether or not to use 538’s decaying k-factor in computing elo)
 START_YEAR - [1968,…,2017] (the year from which we want to start collecting match data)

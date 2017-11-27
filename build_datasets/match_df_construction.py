@@ -1,8 +1,10 @@
-SCRIPT_PATH = '/Users/jacobgollub/Desktop/college/research/pbp_explorations/scripts/sackmann'
+# modify this for your own path
+SCRIPT_PATH = '/Users/path/to/tennis_match_prediction/build_datasets/sackmann'
 TOUR = 'atp'
 COUNT = False
 START_YEAR = 2000
 ONLY_PBP = 0
+DATE = '10_29'
 
 import sys
 sys.path.insert(0,SCRIPT_PATH)
@@ -21,7 +23,7 @@ if __name__=='__main__':
 	print 'main'
 	atp_year_list = []
 	for i in xrange(1968,2018):
-	    atp_year_list.append(pd.read_csv("../../tennis_data/"+TOUR+"/"+TOUR+"_matches_{0}.csv".format(i)))
+	    atp_year_list.append(pd.read_csv("../my_data/matches/"+TOUR+"_matches_{0}.csv".format(i)))
 	df = pd.concat(atp_year_list, ignore_index = True)
 
 	# these may be changes specific to atp dataframe; normalize_name() is specific to atp/wta...
@@ -43,7 +45,6 @@ if __name__=='__main__':
 	atp_all_matches = generate_elo(atp_all_matches,0)
 	atp_all_matches = generate_elo(atp_all_matches,1)
 	atp_all_matches = generate_52_stats(atp_all_matches,start_ind)
-	print 'should be printing adj stats...'
 	atp_all_matches = generate_52_adj_stats(atp_all_matches,start_ind)
 	atp_all_matches = generate_tny_stats(atp_all_matches,start_ind)
 	#print 'adj stats: ', atp_all_matches[atp_all_matches['match_year']==2014][['w_52_s_adj','w_52_r_adj']]
@@ -89,7 +90,6 @@ if __name__=='__main__':
 	# df = generate_logit_probs(df,cols=['elo_diff_538'],col_name='logit_elo_diff_538_prob')
 
 
-	#print 'adj stats 2nd time: ', df[df['match_year']==2014][['p0_52_s_adj','p0_52_r_adj']]
 	# dataframe with only matches that have pbp
 	if ONLY_PBP:
 	    df = df[df['pbp']!='None']
@@ -125,7 +125,7 @@ if __name__=='__main__':
 	# binary indicator for whether player 0 won
 	df['winner'] = [1-winner for winner in df['winner']]
 
-	# generate serving probabilities (w/out JS normalization) for Klaassen-Magnus model
+	# generate serving probabilities for Klaassen-Magnus model
 	df['match_id'] = range(len(df))
 	df['tny_stats'] = [df['avg_52_s'][i] if df['tny_stats'][i]==0 else df['tny_stats'][i] for i in xrange(len(df))]
 	df['p0_s_kls'] = df['tny_stats']+(df['p0_s_pct']-df['avg_52_s']) - (df['p1_r_pct']-df['avg_52_r'])
@@ -163,7 +163,6 @@ if __name__=='__main__':
 
 	# depending on ONLY_PBP, this will have point-by-point matches, or all
 	# tour-level matches from START_DATE to present
-	name = 'elo_pbp_with_surface_10_29' if ONLY_PBP else 'elo_atp_matches_all_10_29'
-	# 'elo_atp_matches_21st_century_9_17'
-	#print name + '.csv saved to my_data'
-	#df.to_csv('../../my_data/'+name+'.csv')
+	name = 'elo_pbp_with_surface_'+DATE if ONLY_PBP else 'elo_atp_matches_all_'+DATE
+	print name + '.csv saved to my_data'
+	df.to_csv('../my_data/'+name+'.csv')
