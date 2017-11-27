@@ -9,7 +9,7 @@ BEST_OF_THREE = 0
 FILE_NAME = 'elo_pbp_with_surface_10_23.csv'
 
 if __name__=='__main__':
-	df = pd.read_csv('../../my_data/'+FILE_NAME)
+	df = pd.read_csv('../my_data/'+FILE_NAME)
 	del df['Unnamed: 0']
 
 	# append . to end of pbp string to signify end of match
@@ -54,7 +54,7 @@ if __name__=='__main__':
 	df_pred['lead_margin'] = df_pred['sets_0']-df_pred['sets_1'] + (df_pred['games_0']-\
 							df_pred['games_1'])/6. + (df_pred['points_0']-df_pred['points_1'])/24.
 	best_of = '3' if BEST_OF_THREE else '5'
-	df_pred.to_csv('../../my_data/feature_df_pbp'+best_of+'_10_23.csv')
+	df_pred.to_csv('../my_data/feature_df_pbp'+best_of+'_10_23.csv')
 	print 'feature_df_pbp'+best_of+'_10_23.csv saved to my_data'
 
 

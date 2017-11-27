@@ -1,5 +1,5 @@
 # modify this for your own path
-SCRIPT_PATH = '/Users/path/to/tennis_match_prediction/build_datasets/sackmann'
+SCRIPT_PATH = '/Users/jacobgollub/Desktop/tennis_match_prediction/build_datasets/sackmann'
 TOUR = 'atp'
 COUNT = False
 START_YEAR = 2000
@@ -53,8 +53,8 @@ if __name__=='__main__':
 	# Combine all the matches that have pbp (point by point) information into one dataframe
 	# and clean up columns in preparation for merging with all_atp_matches
 	pbp_matches_archive = pd.read_csv("../my_data/pbp/pbp_matches_atp_main_archive.csv")
-	pbp_matches_archive_old = pd.read_csv("../my_data/pbp/tennis_data/pbp_matches_atp_main_archive_old.csv")
-	pbp_matches_current = pd.read_csv("../my_data/pbp/tennis_data/pbp_matches_atp_main_current.csv")
+	pbp_matches_archive_old = pd.read_csv("../my_data/pbp/pbp_matches_atp_main_archive_old.csv")
+	pbp_matches_current = pd.read_csv("../my_data/pbp/pbp_matches_atp_main_current.csv")
 	pbp_matches = pd.concat([pbp_matches_archive_old.loc[:932],pbp_matches_archive,pbp_matches_current])
 	pbp_matches.winner = pbp_matches.winner - 1
 	pbp_matches = pbp_matches.reset_index(); del pbp_matches['index']
@@ -119,7 +119,7 @@ if __name__=='__main__':
 	         u'p0_52_s_adj_JS',u'p0_52_r_adj_JS',u'p1_52_s_adj_JS',u'p1_52_r_adj_JS',
 	         u'avg_52_s', u'avg_52_r', u'sf_avg_52_s', u'sf_avg_52_r',
 	         'tny_stats','best_of','score','pbp',
-	         'logit_elo_538_prob', 'logit_elo_prob','logit_elo_diff_prob','logit_elo_diff_538_prob',
+	         'logit_elo_538_prob', #'logit_elo_prob','logit_elo_diff_prob','logit_elo_diff_538_prob',
 	         'winner']]
 
 	# binary indicator for whether player 0 won
