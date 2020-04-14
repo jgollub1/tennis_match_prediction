@@ -20,17 +20,20 @@ def format_match_df(df,ret_strings=[],abd_strings=[]):
     df['is_gs'] = [name in grand_slam_d for name in df['tny_name']]
 
     # Get dates into the same format
-    df['tny_date'] = [datetime.datetime.strptime(str(x), "%Y%m%d").date() for x in df['tny_date']]
+    print(len(df))
+    df = df[df['tny_date'].notna()]
+    print(len(df))
+    df['tny_date'] = [datetime.datetime.strptime(str(x), "%Y.%m.%d").date() for x in df['tny_date']]
     df['match_year'] = [x.year for x in df['tny_date']]
     df['match_month'] = [x.month for x in df['tny_date']]
     df['score'] = [re.sub(r"[\(\[].*?[\)\]]", "", str(s)) for s in df['score']] # str(s) fixes any nans
     df['score'] = ['RET' if 'RET' in s else s for s in df['score']]
-    df['w_swon'] = [df['w_1stWon'][i]+df['w_2ndWon'][i] for i in xrange(len(df))]
-    df['l_swon'] = [df['l_1stWon'][i]+df['l_2ndWon'][i] for i in xrange(len(df))]
-    df['w_rwon'] = df['l_svpt'] - df['l_swon']
-    df['l_rwon'] = df['w_svpt'] - df['w_swon']
-    df['w_rpt'] = df['l_svpt']
-    df['l_rpt'] = df['w_svpt']
+    # df['w_swon'] = [df['w_1stWon'][i]+df['w_2ndWon'][i] for i in xrange(len(df))]
+    # df['l_swon'] = [df['l_1stWon'][i]+df['l_2ndWon'][i] for i in xrange(len(df))]
+    # df['w_rwon'] = df['l_svpt'] - df['l_swon']
+    # df['l_rwon'] = df['w_svpt'] - df['w_swon']
+    # df['w_rpt'] = df['l_svpt']
+    # df['l_rpt'] = df['w_svpt']
 
     # get rid of leading 0s in tny_id
     df['tny_id'] = ['-'.join(t.split('-')[:-1] + [t.split('-')[-1][1:]]) if t.split('-')[-1][0]=='0' else t \
@@ -41,7 +44,7 @@ def format_match_df(df,ret_strings=[],abd_strings=[]):
                                 else score for score in df['score']]
     ret_strings = ['ABN','DEF','In Progress','RET','W/O',' RET',' W/O','nan','walkover']
     ret_d = dict(zip(ret_strings,[1]*len(ret_strings)))
-    df = df.loc[[i for i in range(len(df)) if df['score'][i] not in ret_d]]
+    # df = df.loc[[i for i in range(len(df)) if df['score'][i] not in ret_d]]
     df = df.sort_values(by=['tny_date','tny_name','match_num'], ascending=True).reset_index()
     del df['index']; return df
 
@@ -75,9 +78,12 @@ def generate_elo(df,counts_i):
         # append elos, rate, update
         w_elo,l_elo = players_elo[row['w_name']],players_elo[row['l_name']]
         elo_1s.append(w_elo.value);elo_2s.append(l_elo.value)
-        
+
+        # original
         elo_obj.rate_1vs1(w_elo,l_elo,is_gs,counts=counts_i)
 
+        # adjust elo update based on tournament level
+        # elo_obj.rate_1vs1(w_elo,l_elo,is_gs,counts=counts_i, tny_name=row['tny_name'])
         
         surface_elo_1s.append(surface_elo[surface][row['w_name']].value if surface in ('Hard','Clay','Grass') else w_elo.value)
         surface_elo_2s.append(surface_elo[surface][row['l_name']].value if surface in ('Hard','Clay','Grass') else l_elo.value)

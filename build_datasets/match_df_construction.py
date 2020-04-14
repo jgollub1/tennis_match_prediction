@@ -1,5 +1,5 @@
 # modify this for your own path
-SCRIPT_PATH = '/Users/path/to/tennis_match_prediction/build_datasets/sackmann'
+SCRIPT_PATH = '/Users/jingyaxun/Documents/research/tennis_prediction/tennis_match_prediction/build_datasets/sackmann'
 TOUR = 'atp'
 COUNT = False
 START_YEAR = 2000
@@ -22,7 +22,7 @@ import copy
 if __name__=='__main__':
 	print 'main'
 	atp_year_list = []
-	for i in xrange(1968,2018):
+	for i in xrange(2001,2019):
 	    atp_year_list.append(pd.read_csv("../my_data/matches/"+TOUR+"_matches_{0}.csv".format(i)))
 	df = pd.concat(atp_year_list, ignore_index = True)
 
@@ -164,5 +164,6 @@ if __name__=='__main__':
 	# depending on ONLY_PBP, this will have point-by-point matches, or all
 	# tour-level matches from START_DATE to present
 	name = 'elo_pbp_with_surface_'+DATE if ONLY_PBP else 'elo_atp_matches_all_'+DATE
+	substr = '_dynamic_rating_tny_level_wrong'
 	print name + '.csv saved to my_data'
-	df.to_csv('../my_data/'+name+'.csv')
+	df.to_csv('../my_data/'+name+substr+'.csv')
