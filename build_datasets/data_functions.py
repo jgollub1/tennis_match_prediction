@@ -19,6 +19,20 @@ def format_match_df(df,ret_strings=[],abd_strings=[]):
     grand_slam_d = dict(zip(['Australian Open','Roland Garros','Wimbledon','US Open'],[1]*4))
     df['is_gs'] = [name in grand_slam_d for name in df['tny_name']]
 
+    df['newwdelta1'] = df['w_delta1']
+    df['newwdelta2'] = df['w_delta2']
+    df = df[~df['newwdelta1'].isin(['#VALUE!'])]
+    df = df[~df['newwdelta2'].isin(['#VALUE!'])]
+
+    nametest = df['newwdelta1'].astype(float)
+    nametest1 = df['newwdelta2']
+
+    # df['minusnewwdelta1'] = 1 - nametest
+    # df['minusnewwdelta2'] = 1 - nametest1
+
+    df['minusnewwdelta1'] = nametest
+    df['minusnewwdelta2'] = nametest1
+
     # Get dates into the same format
     print(len(df))
     df = df[df['tny_date'].notna()]
@@ -26,8 +40,8 @@ def format_match_df(df,ret_strings=[],abd_strings=[]):
     df['tny_date'] = [datetime.datetime.strptime(str(x), "%Y.%m.%d").date() for x in df['tny_date']]
     df['match_year'] = [x.year for x in df['tny_date']]
     df['match_month'] = [x.month for x in df['tny_date']]
-    df['score'] = [re.sub(r"[\(\[].*?[\)\]]", "", str(s)) for s in df['score']] # str(s) fixes any nans
-    df['score'] = ['RET' if 'RET' in s else s for s in df['score']]
+    # df['score'] = [re.sub(r"[\(\[].*?[\)\]]", "", str(s)) for s in df['score']] # str(s) fixes any nans
+    # df['score'] = ['RET' if 'RET' in s else s for s in df['score']]
     # df['w_swon'] = [df['w_1stWon'][i]+df['w_2ndWon'][i] for i in xrange(len(df))]
     # df['l_swon'] = [df['l_1stWon'][i]+df['l_2ndWon'][i] for i in xrange(len(df))]
     # df['w_rwon'] = df['l_svpt'] - df['l_swon']
@@ -40,8 +54,8 @@ def format_match_df(df,ret_strings=[],abd_strings=[]):
                                     for t in df['tny_id']]
 
     # get rid of matches involving a retirement
-    df['score'] = ['ABN' if score.split(' ')[-1] in ('abandoned','ABN','ABD','DEF','def','unfinished','Walkover') \
-                                else score for score in df['score']]
+    # df['score'] = ['ABN' if score.split(' ')[-1] in ('abandoned','ABN','ABD','DEF','def','unfinished','Walkover') \
+    #                             else score for score in df['score']]
     ret_strings = ['ABN','DEF','In Progress','RET','W/O',' RET',' W/O','nan','walkover']
     ret_d = dict(zip(ret_strings,[1]*len(ret_strings)))
     # df = df.loc[[i for i in range(len(df)) if df['score'][i] not in ret_d]]
@@ -60,6 +74,48 @@ def format_pbp_df(df,tour='atp'):
     df['score'] = [re.sub(r"[\(\[].*?[\)\]]", "", s) for s in df['score']]
     return df
 
+def generate_elo_stephanie(df,counts):
+    players_list = np.union1d(df.w_name, df.l_name)
+    players_elo = dict(zip(list(players_list), [elo.Rating() for __ in range(len(players_list))]))
+    surface_elo = {}
+    for surface in ('Hard','Clay','Grass'):
+        surface_elo[surface] = dict(zip(list(players_list), [elo.Rating() for __ in range(len(players_list))])) 
+
+    elo_1s, elo_2s = [],[]
+    surface_elo_1s, surface_elo_2s = [],[]
+    elo_obj = elo.Elo_Rater()
+
+    k1, k2 = 5.3, 16
+
+    # k1, k2 = 2.5, 24
+
+    # update player elo from every recorded match
+    for i, row in df.iterrows():
+        surface = row['surface']; is_gs = row['is_gs']; tny_name = row['tny_name']; tny_round_name = row['tourney_round_name']
+        #delta1 = row['newwdelta1'] ; delta2 = row['newwdelta2']
+        delta1 = row['minusnewwdelta1'] ; delta2 = row['minusnewwdelta2']
+        # append elos, rate, update
+        w_elo,l_elo = players_elo[row['w_name']],players_elo[row['l_name']]
+        
+        elo_1s.append(w_elo.value);elo_2s.append(l_elo.value)
+        
+        elo_obj.rate_1vs1_stephanie(w_elo,l_elo, k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name )
+
+        surface_elo_1s.append(surface_elo[surface][row['w_name']].value if surface in ('Hard','Clay','Grass') else w_elo.value)
+        surface_elo_2s.append(surface_elo[surface][row['l_name']].value if surface in ('Hard','Clay','Grass') else l_elo.value)
+        if surface in ('Hard','Clay','Grass'):
+            new_elo1, new_elo2 = elo_obj.rate_1vs1_stephanie(surface_elo[surface][row['w_name']],surface_elo[surface][row['l_name']], k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name)
+
+    # add columns
+    if counts:
+        df['w_elo_538'], df['l_elo_538'] = elo_1s, elo_2s
+        df['w_sf_elo_538'], df['l_sf_elo_538'] = surface_elo_1s, surface_elo_2s
+    else:
+        df['w_elo'], df['l_elo'] = elo_1s, elo_2s
+        df['w_sf_elo'], df['l_sf_elo'] = surface_elo_1s, surface_elo_2s
+    return df
+
+
 # takes in a dataframe of matches in atp/wta format and returns the dataframe with elo columns
 def generate_elo(df,counts_i):
     players_list = np.union1d(df.w_name, df.l_name)
@@ -74,17 +130,22 @@ def generate_elo(df,counts_i):
 
     # update player elo from every recorded match
     for i, row in df.iterrows():
-        surface = row['surface']; is_gs = row['is_gs']
+        surface = row['surface']; is_gs = row['is_gs']; tny_name = row['tny_name']
         # append elos, rate, update
         w_elo,l_elo = players_elo[row['w_name']],players_elo[row['l_name']]
         elo_1s.append(w_elo.value);elo_2s.append(l_elo.value)
 
         # original
-        elo_obj.rate_1vs1(w_elo,l_elo,is_gs,counts=counts_i)
+        # elo_obj.rate_1vs1(w_elo,l_elo,is_gs,counts=counts_i)
 
-        # adjust elo update based on tournament level
-        # elo_obj.rate_1vs1(w_elo,l_elo,is_gs,counts=counts_i, tny_name=row['tny_name'])
+        # adjust elo update based on other scalers
+        # elo_obj.rate_1vs1(w_elo,l_elo,is_gs, counts=counts_i, tny_name=row['tny_name'], tny_round_name=row['tourney_round_name'],\
+        # w_pts_won=row['w_pt_won'], l_pts_won=row['l_pt_won'], pts_total=row['pt_total'],\
+        # w_s1_pts_won=row['winner_service_points_won'], l_s1_pts_won=row['loser_service_points_won'],\
+        # w_s1_pts_total=row['winner_service_points_total'], l_s1_pts_total=row['loser_service_points_total'])
         
+        elo_obj.rate_1vs1(w_elo,l_elo,is_gs, counts=counts_i, tny_name=row['tny_name'], tny_round_name=row['tourney_round_name'])
+
         surface_elo_1s.append(surface_elo[surface][row['w_name']].value if surface in ('Hard','Clay','Grass') else w_elo.value)
         surface_elo_2s.append(surface_elo[surface][row['l_name']].value if surface in ('Hard','Clay','Grass') else l_elo.value)
         if surface in ('Hard','Clay','Grass'):
@@ -97,43 +158,7 @@ def generate_elo(df,counts_i):
     else:
         df['w_elo'], df['l_elo'] = elo_1s, elo_2s
         df['w_sf_elo'], df['l_sf_elo'] = surface_elo_1s, surface_elo_2s
-    return df
-
-# takes in a dataframe of matches in atp/wta format and returns the dataframe with elo columns
-def stephanie_generate_elo(df, k1, k2):
-    players_list = np.union1d(df.w_name, df.l_name)
-    players_elo = dict(zip(list(players_list), [elo.Rating() for __ in range(len(players_list))]))
-    surface_elo = {}
-    for surface in ('Hard','Clay','Grass'):
-        surface_elo[surface] = dict(zip(list(players_list), [elo.Rating() for __ in range(len(players_list))])) 
-
-    elo_1s, elo_2s = [],[]
-    surface_elo_1s, surface_elo_2s = [],[]
-    elo_obj = elo.Elo_Rater()
-
-    # update player elo from every recorded match
-    for i, row in df.iterrows():
-        surface = row['surface']; is_gs = row['is_gs']
-        # append elos, rate, update
-        w_elo,l_elo = players_elo[row['w_name']],players_elo[row['l_name']]
-        delta1, delta2 = row['w_delta1'], row['w_delta2']
-        elo_1s.append(w_elo.value);elo_2s.append(l_elo.value)
-        
-        elo_obj.stephanie_rate_1vs1(w_elo,l_elo, k1, k2, delta1, delta2)
-
-        
-        surface_elo_1s.append(surface_elo[surface][row['w_name']].value if surface in ('Hard','Clay','Grass') else w_elo.value)
-        surface_elo_2s.append(surface_elo[surface][row['l_name']].value if surface in ('Hard','Clay','Grass') else l_elo.value)
-        if surface in ('Hard','Clay','Grass'):
-            new_elo1, new_elo2 = elo_obj.stephanie_rate_1vs1(surface_elo[surface][row['w_name']],surface_elo[surface][row['l_name']], k1, k2, delta1, delta2)
-
-    # add columns
-    if counts_i:
-        df['w_elo_538'], df['l_elo_538'] = elo_1s, elo_2s
-        df['w_sf_elo_538'], df['l_sf_elo_538'] = surface_elo_1s, surface_elo_2s
-    else:
-        df['w_elo'], df['l_elo'] = elo_1s, elo_2s
-        df['w_sf_elo'], df['l_sf_elo'] = surface_elo_1s, surface_elo_2s
+    
     return df
 
 

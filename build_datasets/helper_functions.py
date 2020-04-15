@@ -400,6 +400,9 @@ def do_classify(clf, parameters, indf, featurenames, targetname, target1val, mas
 
 def normalize_name(s,tour='atp'):
     if tour=='atp':
+        if pd.isnull(s):
+            return 'null'
+
         s = s.replace('-',' ')
         s = s.replace('Stanislas','Stan').replace('Stan','Stanislas')
         s = s.replace('Alexandre','Alexander')
