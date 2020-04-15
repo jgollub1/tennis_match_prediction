@@ -159,11 +159,11 @@ class Elo_Rater(object):
         tny_scale = self.s_tournament(tny_name)
 
         # calculate scaler base on match type
-        tny_round_scale = self.s_tournament(tny_round_name)
+        tny_round_scale = self.s_tny_round_name(tny_round_name)
 
-        rating.value = float(rating.value) + ((float(k1) * delta1 + float(k2) * delta2) + k * self.adjust(rating, series) * self.s_tournament(tny_name)) * 1.0
+        rating.value = float(rating.value) + (float(k1) * delta1 + float(k2) * delta2) + k * self.adjust(rating, series)
 
-        # rating.value = float(rating.value) + ((float(k1) * delta1 + float(k2) * delta2) + k * self.adjust(rating, series) * self.s_tournament(tny_name)) * 1.0 * self.avg_scalers([tny_round_scale,tny_scale,rate_scale])
+        # rating.value = float(rating.value) + (float(k1) * delta1 + float(k2) * delta2) + k * self.adjust(rating, series) * self.avg_scalers([tny_round_scale,tny_scale,rate_scale])
         
     def rate_1vs1_stephanie(self, rating1, rating2, k1, k2, delta1, delta2,is_gs=False,counts=True, tny_name="", tny_round_name=""):
         scores = (WIN, LOSS)
@@ -187,7 +187,7 @@ class Elo_Rater(object):
         tny_scale = self.s_tournament(tny_name)
 
         # calculate scaler base on match type
-        tny_round_scale = self.s_tournament(tny_round_name)
+        tny_round_scale = self.s_tny_round_name(tny_round_name)
 
         # calculate scaler base on percentage of total points won
         pts_won_scales = self.s_total_points_won(pts_won, pts_total)

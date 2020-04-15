@@ -27,11 +27,11 @@ def format_match_df(df,ret_strings=[],abd_strings=[]):
     nametest = df['newwdelta1'].astype(float)
     nametest1 = df['newwdelta2']
 
-    # df['minusnewwdelta1'] = 1 - nametest
-    # df['minusnewwdelta2'] = 1 - nametest1
+    df['minusnewwdelta1'] = 1 - nametest
+    df['minusnewwdelta2'] = 1 - nametest1
 
-    df['minusnewwdelta1'] = nametest
-    df['minusnewwdelta2'] = nametest1
+    # df['minusnewwdelta1'] = nametest
+    # df['minusnewwdelta2'] = nametest1
 
     # Get dates into the same format
     print(len(df))
@@ -87,8 +87,6 @@ def generate_elo_stephanie(df,counts):
 
     k1, k2 = 5.3, 16
 
-    # k1, k2 = 2.5, 24
-
     # update player elo from every recorded match
     for i, row in df.iterrows():
         surface = row['surface']; is_gs = row['is_gs']; tny_name = row['tny_name']; tny_round_name = row['tourney_round_name']
@@ -99,7 +97,22 @@ def generate_elo_stephanie(df,counts):
         
         elo_1s.append(w_elo.value);elo_2s.append(l_elo.value)
         
-        elo_obj.rate_1vs1_stephanie(w_elo,l_elo, k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name )
+        # calculate the scalers in a player-dependent way
+        # tmp_df = df.iloc[:i-1]
+        # p1_w_num_in_tournament = len(tmp_df[(tmp_df['w_name'] == row['w_name']) & (tmp_df['tny_name'] == row['tny_name'])])
+        # p1_l_num_in_tournament = len(tmp_df[(tmp_df['l_name'] == row['w_name']) & (tmp_df['tny_name'] == row['tny_name'])])
+        # s_tournament_w = 0
+        # if (p1_w_num_in_tournament + p1_l_num_in_tournament) != 0:
+        #     s_tournament_w = float(p1_w_num_in_tournament) / (p1_w_num_in_tournament + p1_l_num_in_tournament)
+
+        # p2_w_num_in_tournament = len(tmp_df[(tmp_df['w_name'] == row['l_name']) & (tmp_df['tny_name'] == row['tny_name'])])
+        # p2_l_num_in_tournament = len(tmp_df[(tmp_df['l_name'] == row['l_name']) & (tmp_df['tny_name'] == row['tny_name'])])
+        # s_tournament_l = 0
+        # if (p2_w_num_in_tournament + p2_l_num_in_tournament) != 0:
+        #     s_tournament_l = float(p2_w_num_in_tournament) / (p2_w_num_in_tournament + p2_l_num_in_tournament)
+        #################
+
+        elo_obj.rate_1vs1_stephanie(w_elo,l_elo, k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name)
 
         surface_elo_1s.append(surface_elo[surface][row['w_name']].value if surface in ('Hard','Clay','Grass') else w_elo.value)
         surface_elo_2s.append(surface_elo[surface][row['l_name']].value if surface in ('Hard','Clay','Grass') else l_elo.value)
