@@ -8,7 +8,6 @@ ONLY_PBP = 0
 
 import sys
 sys.path.insert(0,SCRIPT_PATH)
-import tennisGameProbability,tennisMatchProbability,tennisSetProbability,tennisTiebreakProbability
 from tennisMatchProbability import matchProb
 from helper_functions import *
 from data_functions import *
