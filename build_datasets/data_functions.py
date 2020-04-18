@@ -1,10 +1,6 @@
 # see if it works with this commented out???
 
 import sys
-sys.path.insert(0,'/sackmann')
-import tennisGameProbability,tennisMatchProbability,tennisSetProbability,tennisTiebreakProbability
-from tennisMatchProbability import matchProb
-
 import numpy as np
 import pandas as pd
 import elo_538 as elo
