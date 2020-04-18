@@ -98,23 +98,23 @@ def generate_elo_stephanie(df,counts, h1, h2):
         elo_1s.append(w_elo.value);elo_2s.append(l_elo.value)
         
         # get different kinds of precalculated scalers
-        s_tournament_w = row['s_tournament_w']
-        s_tournament_l = row['s_tournament_l']
-        s_match_duration_w = row['s_match_duration_w']
-        s_match_duration_l = row['s_match_duration_l']
-        tny_name = row['tny_name']
-        tny_round_name = row['tourney_round_name']
-        is_gs = row['is_gs']
-        surface = row['surface']
-        w_name = row['w_name']
-        l_name = row['l_name']
+        # s_tournament_w = row['s_tournament_w']
+        # s_tournament_l = row['s_tournament_l']
+        # s_match_duration_w = row['s_match_duration_w']
+        # s_match_duration_l = row['s_match_duration_l']
+        # tny_name = row['tny_name']
+        # tny_round_name = row['tourney_round_name']
+        # is_gs = row['is_gs']
+        # surface = row['surface']
+        # w_name = row['w_name']
+        # l_name = row['l_name']
 
-        elo_obj.rate_1vs1_stephanie(w_elo,l_elo, k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name, w_name=w_name, l_name=l_name, s_tournament_w=s_tournament_w, s_tournament_l=s_tournament_l, s_match_duration_w=s_match_duration_w, s_match_duration_l=s_match_duration_l, h1=h1, h2=h2)
+        elo_obj.rate_1vs1_stephanie(w_elo,l_elo, k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name, h1=h1, h2=h2)
 
         surface_elo_1s.append(surface_elo[surface][row['w_name']].value if surface in ('Hard','Clay','Grass') else w_elo.value)
         surface_elo_2s.append(surface_elo[surface][row['l_name']].value if surface in ('Hard','Clay','Grass') else l_elo.value)
         if surface in ('Hard','Clay','Grass'):
-            new_elo1, new_elo2 = elo_obj.rate_1vs1_stephanie(surface_elo[surface][row['w_name']],surface_elo[surface][row['l_name']], k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name, w_name=w_name, l_name=l_name, s_tournament_w=s_tournament_w, s_tournament_l=s_tournament_l, s_match_duration_w=s_match_duration_w, s_match_duration_l=s_match_duration_l, h1=h1, h2=h2)
+            elo_obj.rate_1vs1_stephanie(w_elo,l_elo, k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name, h1=h1, h2=h2)
 
     # add columns
     if counts:
@@ -134,48 +134,40 @@ def generate_elo(df,counts_i):
     for surface in ('Hard','Clay','Grass'):
         surface_elo[surface] = dict(zip(list(players_list), [elo.Rating() for __ in range(len(players_list))])) 
 
-
     elo_1s, elo_2s = [],[]
     surface_elo_1s, surface_elo_2s = [],[]
     elo_obj = elo.Elo_Rater()
-
-
 
     # update player elo from every recorded match
     for i, row in df.iterrows():
         # if surface in ('Hard','Clay','Grass'):
         #     print "same object: ", players_elo[row['w_name']] is surface_elo[surface][row['w_name']]
-        surface = row['surface']; is_gs = row['is_gs']; tny_name = row['tny_name']
+        surface = row['surface']; is_gs = row['is_gs']
         # append elos, rate, update
         w_elo,l_elo = players_elo[row['w_name']],players_elo[row['l_name']]
         elo_1s.append(w_elo.value);elo_2s.append(l_elo.value)
-
-        # get different kinds of precalculated scalers
-        s_tournament_w = row['s_tournament_w']
-        s_tournament_l = row['s_tournament_l']
-        s_match_duration_w = row['s_match_duration_w']
-        s_match_duration_l = row['s_match_duration_l']
+        
         tny_name = row['tny_name']
         tny_round_name = row['tourney_round_name']
-        is_gs = row['is_gs']
-        surface = row['surface']
-        w_name = row['w_name']
-        l_name = row['l_name']
-        # original
-        # elo_obj.rate_1vs1(w_elo,l_elo,is_gs,counts=counts_i)
 
-        # adjust elo update based on other scalers
-        # elo_obj.rate_1vs1(w_elo,l_elo,is_gs, counts=counts_i, tny_name=row['tny_name'], tny_round_name=row['tourney_round_name'],\
-        # w_pts_won=row['w_pt_won'], l_pts_won=row['l_pt_won'], pts_total=row['pt_total'],\
-        # w_s1_pts_won=row['winner_service_points_won'], l_s1_pts_won=row['loser_service_points_won'],\
-        # w_s1_pts_total=row['winner_service_points_total'], l_s1_pts_total=row['loser_service_points_total'])
-        
-        elo_obj.rate_1vs1(w_elo,l_elo,is_gs, counts=counts_i, w_name=w_name, l_name=l_name, s_tournament_w=s_tournament_w, s_tournament_l=s_tournament_l, s_match_duration_w=s_match_duration_w, s_match_duration_l=s_match_duration_l, tny_name=tny_name, tny_round_name=tny_round_name)
+        # get different kinds of precalculated scalers
+        # s_tournament_w = row['s_tournament_w']
+        # s_tournament_l = row['s_tournament_l']
+        # s_match_duration_w = row['s_match_duration_w']
+        # s_match_duration_l = row['s_match_duration_l']
+        # w_name = row['w_name']
+        # l_name = row['l_name']
+
+        # original
+        elo_obj.rate_1vs1(w_elo,l_elo,is_gs,counts=counts_i)
+
+        # elo_obj.rate_1vs1(w_elo,l_elo,is_gs, counts=counts_i, tny_name=tny_name, tny_round_name=tny_round_name)
 
         surface_elo_1s.append(surface_elo[surface][row['w_name']].value if surface in ('Hard','Clay','Grass') else w_elo.value)
         surface_elo_2s.append(surface_elo[surface][row['l_name']].value if surface in ('Hard','Clay','Grass') else l_elo.value)
         if surface in ('Hard','Clay','Grass'):
-            new_elo1, new_elo2 = elo_obj.rate_1vs1(surface_elo[surface][row['w_name']],surface_elo[surface][row['l_name']],is_gs,counts=counts_i, w_name=w_name, l_name=l_name, s_tournament_w=s_tournament_w, s_tournament_l=s_tournament_l, s_match_duration_w=s_match_duration_w, s_match_duration_l=s_match_duration_l, tny_name=tny_name, tny_round_name=tny_round_name)
+            elo_obj.rate_1vs1(surface_elo[surface][row['w_name']],surface_elo[surface][row['l_name']],is_gs,counts=counts_i)
+            # elo_obj.rate_1vs1(surface_elo[surface][row['w_name']],surface_elo[surface][row['l_name']], counts=counts_i, tny_name=tny_name, tny_round_name=tny_round_name)
 
     # add columns
     if counts_i:

@@ -161,7 +161,7 @@ class Elo_Rater(object):
         # calculate scaler base on match type
         tny_round_scale = self.s_tny_round_name(tny_round_name)
 
-        rating.value = float(rating.value) + (float(k1) * delta1 + float(k2) * delta2) + k * self.adjust(rating, series)
+        rating.value = float(rating.value) + (float(k1) * delta1 + float(k2) * delta2) + k * self.adjust(rating, series)*rate_scale
 
         # rating.value = float(rating.value) + (float(k1) * delta1 + float(k2) * delta2) + k * self.adjust(rating, series) * self.avg_scalers([tny_round_scale,tny_scale,rate_scale])
         
@@ -171,40 +171,25 @@ class Elo_Rater(object):
         return (self.rate_stephanie(rating1, [scores[0], r2], k1, k2, delta1, delta2, is_gs, counts, tny_name, tny_round_name, **kwargs),
                 self.rate_stephanie(rating2, [scores[1], r1], k1, k2, -delta1, -delta2, is_gs, counts, tny_name, tny_round_name, **kwargs))
 
-    def rate(self, rating, series, is_gs=False, counts=False, tny_name="", tny_round_name="", pts_won=65, pts_total=100, s1_pts_won=80, s1_pts_total=100, **kwargs):
+    def rate(self, rating, series, is_gs=False, counts=False, tny_name="", tny_round_name=""):
         """Calculates new ratings by the game result series."""
         k = self.calculate_k(rating,counts)*1.1 if is_gs else self.calculate_k(rating,counts)
-        # k = self.exp_decay_k(rating,counts)*1.1 if is_gs else self.exp_decay_k(rating,counts)
-        # k = self.step_decay_k(rating,counts)*1.1 if is_gs else self.step_decay_k(rating,counts)
 
-        if series[0] == 1:
-            s_tournament = kwargs['s_tournament_w'] 
-            s_match_duration = kwargs['s_match_duration_w']
-        else:
-            s_tournament = kwargs['s_tournament_l']
-            s_match_duration = kwargs['s_match_duration_l']
-        # print "haha: ", s_tournament, s_match_duration
+        # original formula for updating rating
+        rating.value = float(rating.value) + k * self.adjust(rating, series)
 
-        # original
-        # rating.value = float(rating.value) + k * self.adjust(rating, series)
+        # TO UPDATE K WITH 3 ADDITIONAL SCALARS, COMMENT OUT THE LINE ABOVE AND UNCOMMENT THE CODE BELOW
+        
+        # calculate scalar base on current rating
+        # rate_scale = 1+18/(1+2**((float(rating.value)-1500)/63))
 
-        # calculate scaler base on current rating
-        rate_scale = 1+18/(1+2**((float(rating.value)-1500)/63))
+        # calculate scalar base on tournament level
+        # tny_scale = self.s_tournament(tny_name)
 
-        # calculate scaler base on tournament level
-        tny_scale = self.s_tournament(tny_name)
+        # calculate scalar base on match type
+        # tny_round_scale = self.s_tny_round_name(tny_round_name)
 
-        # calculate scaler base on match type
-        tny_round_scale = self.s_tny_round_name(tny_round_name)
-
-        # calculate scaler base on percentage of total points won
-        pts_won_scales = self.s_total_points_won(pts_won, pts_total)
-
-        # calculate scaler base on percentage of first serve points won
-        serve1_pts_won_scales = self.s_1st_serve_pts_won(s1_pts_won, s1_pts_total)
-
-        rating.value = float(rating.value) + k * self.adjust(rating, series) * self.avg_scalers([tny_round_scale,tny_scale,rate_scale, s_tournament])
-        # rating.value = float(rating.value) + k * self.adjust(rating, series) * serve1_pts_won_scales
+        # rating.value = float(rating.value) + k * self.adjust(rating, series) * self.avg_scalers([rate_scale])
 
         rating.times += 1
         return rating
@@ -212,9 +197,9 @@ class Elo_Rater(object):
     # def adjust_1vs1(self, rating1, rating2, drawn=False):
     #     return self.adjust(rating1, [(DRAW if drawn else WIN, rating2)])
 
-    def rate_1vs1(self, rating1, rating2, is_gs=False,counts=True, tny_name="", tny_round_name="", w_pts_won=65, l_pts_won=65, pts_total=100, w_s1_pts_won=80, l_s1_pts_won=80, w_s1_pts_total=100, l_s1_pts_total=100, **kwargs):
+    def rate_1vs1(self, rating1, rating2, is_gs=False,counts=True, tny_name="", tny_round_name="",):
         scores = (WIN, LOSS)
         r1,r2 = rating1.value, rating2.value
-        return (self.rate(rating1, [scores[0], r2], is_gs, counts, tny_name, tny_round_name, w_pts_won, pts_total,w_s1_pts_won,w_s1_pts_total, **kwargs),
-                self.rate(rating2, [scores[1], r1], is_gs, counts, tny_name, tny_round_name, l_pts_won, pts_total,l_s1_pts_won,l_s1_pts_total, **kwargs))
+        return (self.rate(rating1, [scores[0], r2], is_gs, counts, tny_name, tny_round_name),
+                self.rate(rating2, [scores[1], r1], is_gs, counts, tny_name, tny_round_name))
 
