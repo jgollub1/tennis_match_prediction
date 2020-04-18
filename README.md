@@ -6,7 +6,7 @@ python match_df_construction_bookmaker.py --test_year 2010 2011 2012 2013 2014 2
 
 This will generate elo ratings from 2001 to 2019, and print out prediction accuacies from 2010 to 2019. 
 
-To update K with the three additional features described in the report, please uncomment the code in rate() in elo_538.py.
+To update K with the three additional features described in the report, please uncomment the code in rate() in elo_538.py. Detailed description on the three features can be found in Tennis_Prediction.pdf
 
 Data can be downloaded [here](https://drive.google.com/file/d/12gmvB41brLibGojE5pHbLsmsgT7jS_ix/view?usp=sharing).
 
