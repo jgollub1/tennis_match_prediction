@@ -1,7 +1,7 @@
 # see if it works with this commented out???
 
 import sys
-sys.path.insert(0,'/Users/jacobgollub/Desktop/college/research/pbp_explorations/scripts/sackmann')
+sys.path.insert(0,'/sackmann')
 import tennisGameProbability,tennisMatchProbability,tennisSetProbability,tennisTiebreakProbability
 from tennisMatchProbability import matchProb
 
