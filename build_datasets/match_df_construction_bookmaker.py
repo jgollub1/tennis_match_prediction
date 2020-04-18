@@ -1,5 +1,5 @@
 # modify this for your own path
-SCRIPT_PATH = '/Users/jingyaxun/Documents/research/tennis_prediction/tennis_match_prediction/build_datasets/sackmann'
+SCRIPT_PATH = '/Users/weijianli/tennis_prediction/jingya/tennis_match_prediction/build_datasets/sackmann'
 TOUR = 'atp'
 COUNT = False
 START_YEAR = 2000
@@ -19,6 +19,110 @@ import re
 import math
 import copy
 import argparse
+from multiprocessing import Pool
+import signal
+
+def initializer():
+    """Ignore CTRL+C in the worker process."""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+def f(atp_all_matches1, k1):
+    kk1, kk2, a = 0, 0, 0
+    for k2 in xrange(1, 101):
+        atp_all_matches = stephanie_generate_elo(atp_all_matches1, k1, k2)
+        df = atp_all_matches
+        df['elo_diff'] = [df['w_elo'][i] - df['l_elo'][i] for i in xrange(len(df))]
+        df2 = df[df['match_year'] == 2017].reset_index(drop=True)
+        acc = sum((df2['elo_diff'] > 0)) / float(len(df2))
+        print 'baseline: ', acc, "k1, k2: ", k1, " ", k2
+        if acc > a:
+            a = acc
+            kk1 = k1
+            kk2 = k2
+    return (a, kk1, kk2)
+
+    
+
+def g(atp_all_matches1, k1):
+    kk1, kk2, a = 0, 0, 0
+    tmp = []
+    for k2 in xrange(50, 101):
+        atp_all_matches = generate_elo_stephanie(atp_all_matches1, 1, k1, k2)
+        df = atp_all_matches
+        df['elo_diff'] = [df['w_elo'][i] - df['l_elo'][i] for i in xrange(len(df))]
+        for j in [2015, 2016, 2017, 2018, 2019]:
+            df2 = df[df['match_year'] == j].reset_index(drop=True)
+            tmp.append(sum((df2['surface elo 538 baseline'] > 0)) / float(len(df2)))
+        acc = np.mean(tmp)
+        print 'baseline: ', acc, "h1, h2: ", k1, " ", k2
+        if acc > a:
+            a = acc
+            kk1 = k1
+            kk2 = k2
+    return (a, kk1, kk2)
+
+
+def grid_search_k1k2(atp_all_matches1):
+    try:
+        K1, K2, ACC = 0, 0, 0
+        pool = Pool(processes=10, initializer=initializer)
+        # multiple_results = pool.map(f, xrange(1, 101))
+        multiple_results = [pool.apply_async(f, args=(atp_all_matches1, i)) for i in xrange(1, 101)]
+        pool.close()
+        pool.join()
+        results = [i.get() for i in multiple_results]
+        for result in results:
+            if ACC < result[0]:
+                K1 = result[1]
+                K2 = result[2]
+        # for k1 in xrange(1, 101):
+        #     for k2 in xrange(1, 101):
+        #         atp_all_matches = stephanie_generate_elo(atp_all_matches1, k1, k2)
+        #         df = atp_all_matches
+        #         df['elo_diff'] = [df['w_elo'][i] - df['l_elo'][i] for i in xrange(len(df))]
+        #         df2 = df[df['match_year']==2017].reset_index(drop=True)
+        #         acc = sum((df2['elo_diff']>0))/float(len(df2))
+        #         print 'baseline: ',  acc, "k1, k2: ", k1, " ", k2
+        #         if acc > ACC:
+        #             ACC = acc
+        #             K1 = k1
+        #             K2 = k2
+        print "best accuracy: ", ACC, "k1, k2: ", K1, K2
+    except KeyboardInterrupt:
+        pool.terminate()
+        pool.join()
+
+def grid_search_h1h2(atp_all_matches1):
+    try:
+        K1, K2, ACC = 0, 0, 0
+        pool = Pool(processes=10, initializer=initializer)
+        # multiple_results = pool.map(f, xrange(1, 101))
+        multiple_results = [pool.apply_async(g, args=(atp_all_matches1, i)) for i in xrange(1, 101)]
+        pool.close()
+        pool.join()
+        results = [i.get() for i in multiple_results]
+        for result in results:
+            if ACC < result[0]:
+                K1 = result[1]
+                K2 = result[2]
+        # for k1 in xrange(1, 101):
+        #     for k2 in xrange(1, 101):
+        #         atp_all_matches = stephanie_generate_elo(atp_all_matches1, k1, k2)
+        #         df = atp_all_matches
+        #         df['elo_diff'] = [df['w_elo'][i] - df['l_elo'][i] for i in xrange(len(df))]
+        #         df2 = df[df['match_year']==2017].reset_index(drop=True)
+        #         acc = sum((df2['elo_diff']>0))/float(len(df2))
+        #         print 'baseline: ',  acc, "k1, k2: ", k1, " ", k2
+        #         if acc > ACC:
+        #             ACC = acc
+        #             K1 = k1
+        #             K2 = k2
+        print "best accuracy: ", ACC, "h1, h2: ", K1, K2
+    except KeyboardInterrupt:
+        pool.terminate()
+        pool.join()
+
 
 
 if __name__=='__main__':
@@ -26,7 +130,7 @@ if __name__=='__main__':
 	atp_year_list = []
 	# for i in xrange(2001,2019):
 	#     atp_year_list.append(pd.read_csv("../my_data/.csv".format(i)))
-	df = pd.read_csv("../my_data/bookmaker_delta.csv")
+	df = pd.read_csv("../my_data/bookmaker_delta4.csv")
 
 	# these may be changes specific to atp dataframe; normalize_name() is specific to atp/wta...
 	df = df.rename(columns={'winner':'w_name','loser':'l_name','tourney_year_id':'tny_id',\
@@ -61,10 +165,12 @@ if __name__=='__main__':
 	start_ind = atp_all_matches[atp_all_matches['match_year']>=START_YEAR-1].index[0]
 	
 	# atp_all_matches = generate_elo(atp_all_matches,0)
-	# atp_all_matches = generate_elo(atp_all_matches,1)
+	atp_all_matches = grid_search_h1h2(atp_all_matches)
 
-	atp_all_matches = generate_elo_stephanie(atp_all_matches,0)
-	atp_all_matches = generate_elo_stephanie(atp_all_matches,1)
+    # atp_all_matches = grid_search_h1h2(atp_all_matches)
+
+    # atp_all_matches = generate_elo_stephanie(atp_all_matches,0)
+    # atp_all_matches = generate_elo_stephanie(atp_all_matches,1)
 
 	# atp_all_matches = generate_52_stats(atp_all_matches,start_ind)
 	# atp_all_matches = generate_52_adj_stats(atp_all_matches,start_ind)
@@ -150,7 +256,7 @@ if __name__=='__main__':
 # df = pd.read_csv('../my_data/elo_pbp_with_surface_11_26_dynamic_rating_tny_level_wrong.csv')
 # del df['Unnamed: 0']
 
-print(df)
+# print(df)
 
 parser = argparse.ArgumentParser(description='Short sample app')
 parser.add_argument('--test_year', nargs='+', type=int)
