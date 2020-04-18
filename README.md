@@ -4,8 +4,8 @@
 
 To run the pre-match prediction, run the following command in the terminal
 
-```python
-python match_df_construction_bookmaker.py --test_year 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019
+```
+python2 match_df_construction_bookmaker.py --test_year 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019
 ```
 
 This will generate elo ratings from 2001 to 2019, and print out prediction accuacies from 2010 to 2019. 
