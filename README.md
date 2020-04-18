@@ -8,7 +8,7 @@ This will generate elo ratings from 2001 to 2019, and print out prediction accua
 
 To update K with the three additional features described in the report, please uncomment the code in rate() in elo_538.py.
 
-Data can be downloaded (here)[https://drive.google.com/file/d/12gmvB41brLibGojE5pHbLsmsgT7jS_ix/view?usp=sharing].
+Data can be downloaded here](https://drive.google.com/file/d/12gmvB41brLibGojE5pHbLsmsgT7jS_ix/view?usp=sharing).
 
 ========Below is the original README===========
 
