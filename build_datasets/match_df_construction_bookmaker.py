@@ -1,5 +1,5 @@
 # modify this for your own path
-SCRIPT_PATH = '/Users/jingyaxun/Documents/research/tennis_prediction/tennis_match_prediction/build_datasets/sackmann'
+SCRIPT_PATH = '/sackmann'
 TOUR = 'atp'
 COUNT = False
 START_YEAR = 2000
