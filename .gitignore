@@ -1,3 +1,8 @@
 venv
+match_data_formatted
+match_data_constructed
 *.pyc
 .*DS_Store
+*.ipynb
+.ipynb_checkpoints
+.vscode
