@@ -754,36 +754,6 @@ def generate_bc_stats_elo_induced(df,col,start_ind=0):
     del df['s_total']
     return df
 
-def kovalchik_induced_s(prob, s_diff):
-    s0 = .5
-    diff = .25
-    current_prob = matchProb(s0, s0 - s_diff)
-
-    while abs(current_prob - prob) > EPSILON:
-        if current_prob < prob:
-            s0 += diff
-        else:
-            s0 -= diff
-        diff /= 2
-        current_prob = matchProb(s0, s0 - s_diff)
-
-    return s0, 1 - (s0 - s_diff)
-
-
-'''
-import to set s_total with EM-normalized percentages
-'''
-def generate_bc_stats_kovalchik_induced(df,col,start_ind=0):
-    df['s_diff'] = df['p0_s_kls_EM'] - (1 - df['p1_s_kls_EM'])
-    induced_s = np.zeros([len(df),2])
-    for i, row in df.loc[start_ind:].iterrows():
-        induced_s[i] = kovalchik_induced_s(row[col+'_prob'],row['s_diff'])
-    df['p0_s_kls_' + col + '_kovalchik'] = induced_s[:,0]
-    df['p1_s_kls_' + col + '_kovalchik'] = induced_s[:,1]
-
-    del df['s_diff']
-    return df
-
 def format_pbp_df(df,tour='atp'):
     df['w_name'] = np.where(df['winner'] == 0, df['server1'], df['server2'])
     df['l_name'] = np.where(df['winner'] == 0, df['server2'], df['server1'])
