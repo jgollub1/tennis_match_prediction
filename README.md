@@ -1,3 +1,7 @@
+# Research Paper
+
+This repository contains the implementation for all methods oulined in the research paper [Forecasting Serve Performance in Professional Tennis Matches](https://content.iospress.com/articles/journal-of-sports-analytics/jsa200345), published in the Journal of Sports Analytics (2021). `research_paper/Results.ipynb` lists each method's predictive performance across ATP tour-level matches from 2014-2016, as well as the match statistics used in each case study.
+
 # Tennis Match Prediction
 
 		2017 Australian Open Men's Singles Final
